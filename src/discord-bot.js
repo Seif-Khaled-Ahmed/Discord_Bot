@@ -6,6 +6,7 @@ const fs = require('fs'); //MSH FAKER
 dotenv.config();
 const {spawn}  = require('child_process'); //SPAWN FOR PYTHON SCRIPT
 const server = require('./server');
+const {AttachmentBuilder, EmbedBuilder } = require('discord.js');
 
 
 const client = new Client({
@@ -48,18 +49,18 @@ await childPython.on('close',(data) => {
  
 //*{DatabaseAPI}///////////////////////////////////////
 
-async function connect(){
-  await axios({
-    method:'get',
-    url:`http://localhost:${port}/`,
+// async function connect(){
+//   await axios({
+//     method:'get',
+//     url:`http://localhost:${port}/`,
     
-  }).then(response => {
-    console.log(`${response.data}`);
-  })
-  .catch(error => {
-    console.error('There was an error in express', error);
-  });
-}
+//   }).then(response => {
+//     console.log(`${response.data}`);
+//   })
+//   .catch(error => {
+//     console.error('There was an error in express', error);
+//   });
+// }
 
 
 
@@ -81,7 +82,7 @@ async function newPlayer(name){
 
 async function updatePlayer(name,add){
   await axios({
-    method:'post',
+    method:'put',
     url:`http://localhost:${port}/update`,
     data:{
       name: name,
@@ -111,13 +112,15 @@ async function findPlayer(name){
   }
 
 //TODO{API FOR STOCKS}////////////////////////////////////
-const symbol = 'APPL'
+const stockSymbol = 'AAPL';
+const firstDate = '2024-01-30';
+const secondDate = '2024-09-30';
 async function getYear(){
-  const response = await axios.get('https://api.nasdaq.com/api/quote/AAPL/chart', {
+  const response = await axios.get(`https://api.nasdaq.com/api/quote/${stockSymbol}/chart`, {
     params: {
       'assetclass': 'stocks',
-      'fromdate': '2024-01-30',
-      'todate': '2024-07-30'
+      'fromdate': firstDate,
+      'todate': secondDate
     },
     headers: {
       'accept': 'application/json, text/plain, */*',
@@ -143,10 +146,27 @@ async function getYear(){
 
 client.on('ready', (c)=>{
     console.log(`${c.user.username} is ready`)
-    connect();
+    //connect();
     
 
 })
+///////////////////////////////////////////////////////////////////////
+const file = new AttachmentBuilder('stock-files/stock-graph.png');
+const stockEmbed = new EmbedBuilder()
+	.setColor(0x008000)
+	.setTitle(`Stock Data`)
+	//.setURL('https://discord.js.org/')
+	.setDescription('description')
+
+	.addFields({ name: `${stockSymbol}`, value: `${firstDate} - ${secondDate}`, inline: true })
+	.setImage('attachment://stock-graph.png')
+	//.setTimestamp()
+	//.setFooter({ text: 'omar sucks', iconURL: 'https://i.imgur.com/AfFp7pu.png' });
+
+
+
+
+//////////////////////////////////////////////////////////////////////
 
 client.on('messageCreate',async (message)=>{
 
@@ -154,39 +174,19 @@ client.on('messageCreate',async (message)=>{
 
     if(message.content.toLowerCase().includes(`stock`))
       {
+        fs.writeFile('./stock-files/stock-data.json',JSON.stringify(await getYear(),null,2), err => {if(err) console.log(err);})
+        await getGraph()
+        message.channel.send({embeds: [stockEmbed], files: [file] })
 
       //await newPlayer('seif');
-      await updatePlayer('seif', 5 )
-      await findPlayer('seif')
-      console.log(findPlayer("blabla"));
-      //fs.writeFile('./Stock-files/stock-data.json',JSON.stringify(await getYear(),null,2), err => {if(err) console.log(err);})
-      getGraph()
+      //await updatePlayer('seif', 5 )
+      //await findPlayer('seif')
+      //console.log(findPlayer("blabla"));
 
       //getYear();
     }
 
-    if(message.content.toLowerCase().includes(`!add`))
-    {
-      const words = message.content.toLowerCase().slice(4).trim().split(' ');
-      // Extract the next two words
-      const firstWord = words[0];
-      const secondWord = words[1];
-      if (words.length >= 2) {
-          
-          if (findPlayer(firstWord) == true){
-            message.channel.send("DONEE")
-            await newPlayer(firstWord)
-            await updatePlayer(firstWord,secondWord)
-          }else
-          {
-            message.channel.send("done")
-            await updatePlayer(firstWord,secondWord)
-          }
-    }else
-    {
-      message.channel.send(firstWord + secondWord +"wrong format")
-    }
-  }
+    
 })
 
 
