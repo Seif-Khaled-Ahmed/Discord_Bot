@@ -1,11 +1,12 @@
 const {Client,IntentsBitField,ApplicationCommandType} = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const axios = require('axios'); //AXIOS FOR API REQUESTS
-const keys = require('./keys');
+const dotenv = require('dotenv');
 const fs = require('fs'); //MSH FAKER
-const port = keys.yourPort;
-
+dotenv.config();
 const {spawn}  = require('child_process'); //SPAWN FOR PYTHON SCRIPT
+const server = require('./server');
+
 
 const client = new Client({
   intents: [
@@ -16,7 +17,13 @@ const client = new Client({
   ], 
 });
 
-client.login(keys.yourBotKey); //Key for Bot
+
+
+const port = process.env.Port;
+
+client.login(process.env.DiscordBotKey); //Key for Bot
+
+
 
 //!{Run Python Sript}//////////////////
 
@@ -24,7 +31,7 @@ async function getGraph(){
 
   const hexToString = (hex) => Buffer.from(hex, 'hex').toString('utf8');
 
-  const childPython = spawn('python', ['src/Graph.py']);
+  const childPython = spawn('python', ['stock-files/graph.py']);
 
 await childPython.stdout.on('data',(data) => {
   console.log(hexToString(data));
@@ -47,7 +54,7 @@ async function connect(){
     url:`http://localhost:${port}/`,
     
   }).then(response => {
-    console.log(`${response.data} port: ${port}`);
+    console.log(`${response.data}`);
   })
   .catch(error => {
     console.error('There was an error in express', error);
@@ -65,7 +72,7 @@ async function newPlayer(name){
       name:name
     }
   }).then(response => {
-    console.log(response.data);
+    return(response.data);
   })
   .catch(error => {
     console.error('There was an error registering the player!', error);
@@ -95,21 +102,22 @@ async function findPlayer(name){
       name:name
     } 
   }).then(response => {
-      console.log(response.data);
+      return (response.data)
     })
     .catch(error => {
       console.error('There was an error finding the player!', error);
+      return (error.data)
     });
   }
 
 //TODO{API FOR STOCKS}////////////////////////////////////
-const symbol = 'MSFT'
+const symbol = 'APPL'
 async function getYear(){
-  const output = await axios.get('https://api.nasdaq.com/api/quote/AAPL/chart', {
+  const response = await axios.get('https://api.nasdaq.com/api/quote/AAPL/chart', {
     params: {
       'assetclass': 'stocks',
-      'fromdate': '2024-06-28',
-      'todate': '2024-07-28'
+      'fromdate': '2024-01-30',
+      'todate': '2024-07-30'
     },
     headers: {
       'accept': 'application/json, text/plain, */*',
@@ -126,7 +134,7 @@ async function getYear(){
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
     }
   });
-  return output.data;
+  return response.data;
 }
 
 /////////////////////////{Listen Stock Command}////////////////////////////////////
@@ -136,6 +144,7 @@ async function getYear(){
 client.on('ready', (c)=>{
     console.log(`${c.user.username} is ready`)
     connect();
+    
 
 })
 
@@ -143,16 +152,41 @@ client.on('messageCreate',async (message)=>{
 
     console.log(`${message.author.displayName}: ${message.content}`);
 
-    if(message.content.toLowerCase().includes(`stock`)){
+    if(message.content.toLowerCase().includes(`stock`))
+      {
 
-
-      //await updatePlayer('seif', 5 )
-      //await findPlayer('seif')
-      console.log(await getYear());
-      console.log(JSON.stringify(await getYear(), null, 2));
+      //await newPlayer('seif');
+      await updatePlayer('seif', 5 )
+      await findPlayer('seif')
+      console.log(findPlayer("blabla"));
+      //fs.writeFile('./Stock-files/stock-data.json',JSON.stringify(await getYear(),null,2), err => {if(err) console.log(err);})
+      getGraph()
 
       //getYear();
     }
+
+    if(message.content.toLowerCase().includes(`!add`))
+    {
+      const words = message.content.toLowerCase().slice(4).trim().split(' ');
+      // Extract the next two words
+      const firstWord = words[0];
+      const secondWord = words[1];
+      if (words.length >= 2) {
+          
+          if (findPlayer(firstWord) == true){
+            message.channel.send("DONEE")
+            await newPlayer(firstWord)
+            await updatePlayer(firstWord,secondWord)
+          }else
+          {
+            message.channel.send("done")
+            await updatePlayer(firstWord,secondWord)
+          }
+    }else
+    {
+      message.channel.send(firstWord + secondWord +"wrong format")
+    }
+  }
 })
 
 
