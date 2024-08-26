@@ -44,6 +44,7 @@ app.listen(port,() =>{
     console.log (`server is running on port ${port}`)
 })
 
+//!Create User                   ////////////////////////////////////
 
 app.post("/",async (req,res)=>{
     const user = req.body;
@@ -67,6 +68,7 @@ app.post("/",async (req,res)=>{
 }
 });
 
+//!Edit User                     //////////////////////////////////////
 app.put("/", async(req,res)=>{
     const user  = req.body;
 
@@ -87,7 +89,7 @@ app.put("/", async(req,res)=>{
 });
 
 
-
+//!Find User                     //////////////////////////////////////
 app.get("/", async (req, res) => {
     try {
         const user = req.body;
@@ -95,9 +97,15 @@ app.get("/", async (req, res) => {
         const userx = await player.findOne({name: user.name});
 
         if(userx == null){
-            res.status(404).send(`Not Found`)
+            res.status(404).send({
+                found:false
+            })
         }else{
-            res.status(200).send(`Found ${userx.name} With Balance ${userx.balance}`);
+            res.status(200).send({
+                "found": true,
+                "name": userx.name,
+                "balance": userx.balance
+            });
 
         }
     } catch (error) {

@@ -68,7 +68,7 @@ async function newPlayer(name){
   ///if(newPlayer.findPlayer(name))
   await axios({
     method:'post',
-    url:`http://localhost:${port}/register`,
+    url:`http://localhost:${port}/`,
     data:{
       name:name
     }
@@ -83,7 +83,7 @@ async function newPlayer(name){
 async function updatePlayer(name,add){
   await axios({
     method:'put',
-    url:`http://localhost:${port}/update`,
+    url:`http://localhost:${port}/`,
     data:{
       name: name,
       toAdd: add
@@ -95,22 +95,25 @@ async function updatePlayer(name,add){
     console.error('There was an error updating the player!', error);
   });
 }
-async function findPlayer(name){
-  await axios({
-    method:'get',
-    url:`http://localhost:${port}/find`,
-    data:{
-      name:name
-    } 
-  }).then(response => {
-      return (response.data)
-    })
-    .catch(error => {
-      console.error('There was an error finding the player!', error);
-      return (error.data)
-    });
-  }
 
+async function findPlayer(name) {
+  try {
+    const response = await axios({
+      method: 'get',
+      url: `http://localhost:${port}/`,
+      data: {
+        name: name
+      }
+    });
+
+    console.log(response.data);  // This prints the JSON fine
+    return response.data;        // This returns the data
+
+  } catch (error) {
+    console.error('There was an error finding the player!', error);
+    return error.response ? error.response.data : error.message;
+  }
+}
 //TODO{API FOR STOCKS}////////////////////////////////////
 const stockSymbol = 'AAPL';
 const firstDate = '2024-01-30';
@@ -169,22 +172,41 @@ const stockEmbed = new EmbedBuilder()
 //////////////////////////////////////////////////////////////////////
 
 client.on('messageCreate',async (message)=>{
+  
+  let username = message.author.username;
+  console.log(`${username}: ${message.content}`);
 
-    console.log(`${message.author.displayName}: ${message.content}`);
-
-    if(message.content.toLowerCase().includes(`stock`))
-      {
-        fs.writeFile('./stock-files/stock-data.json',JSON.stringify(await getYear(),null,2), err => {if(err) console.log(err);})
-        await getGraph()
-        message.channel.send({embeds: [stockEmbed], files: [file] })
-
-      //await newPlayer('seif');
-      //await updatePlayer('seif', 5 )
-      //await findPlayer('seif')
-      //console.log(findPlayer("blabla"));
-
-      //getYear();
+  if(message.content.toLowerCase().includes(`stock`))
+    {
+      fs.writeFile('./stock-files/stock-data.json',JSON.stringify(await getYear(),null,2), err => {if(err) console.log(err);}) //make stock-data for graph
+      await getGraph()
+     
+      message.channel.send({embeds: [stockEmbed], files: [file] })   //send embed
+     
+      
     }
+  if(message.content.toLowerCase() == (`add`)){
+
+    if(await findPlayer(username).found){
+      await updatePlayer(username, 5 )
+      message.channel.send(`added new balance: ${await findPlayer(username).balance}`)
+    }else{
+      await newPlayer(username);
+      message.channel.send(`added new user`)
+    }
+  }
+
+  if(message.content.toLowerCase() == (`bal`)){
+    const userFound = await findPlayer(username)
+
+    if(userFound.found){
+      message.channel.send(`found ${userFound.name} with balance ${userFound.balance}`)
+
+    }else{
+      await newPlayer(username);
+      message.channel.send(`added new user`)
+    }
+   }
 
     
 })

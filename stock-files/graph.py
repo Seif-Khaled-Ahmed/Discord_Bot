@@ -81,4 +81,4 @@ plt.savefig('stock-files/stock-graph.png')
 # Optionally show the plot
 # plt.show()
 
-print('Plot graph good')
+print('Graph Plotted')
