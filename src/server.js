@@ -93,11 +93,16 @@ app.put("/", async(req,res)=>{
 app.get("/", async (req, res) => {
     try {
         const user = req.body;
+        
+        if(user.name == undefined){
+            const userx = await player.find({})
+            res.status(200).send(userx);
 
-        const userx = await player.findOne({name: user.name});
+        }else{
+            const userx = await player.findOne({name: user.name});
 
         if(userx == null){
-            res.status(404).send({
+                res.send({
                 found:false
             })
         }else{
@@ -106,13 +111,17 @@ app.get("/", async (req, res) => {
                 "name": userx.name,
                 "balance": userx.balance
             });
-
+            
         }
+    }
     } catch (error) {
         res.status(500).send("Server Error Finding User");
         console.log(error);
     }
 });
+
+//!getAll                    //////////////////////////////////////
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

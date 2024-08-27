@@ -1,4 +1,4 @@
-const {Client,IntentsBitField,ApplicationCommandType} = require('discord.js');
+const {Client,IntentsBitField,ApplicationCommandType, ActionRowBuilder, ButtonBuilder, ButtonStyle} = require('discord.js');
 const { SlashCommandBuilder } = require('discord.js');
 const axios = require('axios'); //AXIOS FOR API REQUESTS
 const dotenv = require('dotenv');
@@ -76,7 +76,7 @@ async function newPlayer(name){
     return(response.data);
   })
   .catch(error => {
-    console.error('There was an error registering the player!', error);
+    console.error('There was an error registering the player!',error);
   });
 }
 
@@ -92,7 +92,7 @@ async function updatePlayer(name,add){
     console.log(response.data);
   })
   .catch(error => {
-    console.error('There was an error updating the player!', error);
+    console.error('There was an error updating the player!');
   });
 }
 
@@ -110,8 +110,7 @@ async function findPlayer(name) {
     return response.data;        // This returns the data
 
   } catch (error) {
-    console.error('There was an error finding the player!', error);
-    return error.response ? error.response.data : error.message;
+    console.error('There was an error finding the player!',error);
   }
 }
 //TODO{API FOR STOCKS}////////////////////////////////////
@@ -143,7 +142,7 @@ async function getYear(){
   return response.data;
 }
 
-/////////////////////////{Listen Stock Command}////////////////////////////////////
+//!{Listen Stock Command}////////////////////////////////////
 
 
 
@@ -153,7 +152,7 @@ client.on('ready', (c)=>{
     
 
 })
-///////////////////////////////////////////////////////////////////////
+//!embeds/////////////////////////////////////////////////////////////////////
 const file = new AttachmentBuilder('stock-files/stock-graph.png');
 const stockEmbed = new EmbedBuilder()
 	.setColor(0x008000)
@@ -168,45 +167,78 @@ const stockEmbed = new EmbedBuilder()
 
 
 
-
 //////////////////////////////////////////////////////////////////////
 
 client.on('messageCreate',async (message)=>{
-  
-  let username = message.author.username;
-  console.log(`${username}: ${message.content}`);
+  const author  = message.author;
+  var userId = author.id;
+  var user = author.username;
+  console.log(`${user}: ${message.content}`);
 
   if(message.content.toLowerCase().includes(`stock`))
     {
       fs.writeFile('./stock-files/stock-data.json',JSON.stringify(await getYear(),null,2), err => {if(err) console.log(err);}) //make stock-data for graph
       await getGraph()
-     
-      message.channel.send({embeds: [stockEmbed], files: [file] })   //send embed
-     
-      
+      const row = new ActionRowBuilder();
+      row.components.push(
+        new ButtonBuilder().setCustomId("5").setLabel("green").setStyle(ButtonStyle.Primary)
+      )
+      await message.channel.send({
+        embeds: [stockEmbed],
+        files: [file],
+        components: [row]
+        })   //send embed
+        process.exit();
     }
-  if(message.content.toLowerCase() == (`add`)){
-
-    if(await findPlayer(username).found){
-      await updatePlayer(username, 5 )
-      message.channel.send(`added new balance: ${await findPlayer(username).balance}`)
+  if(message.content.toLowerCase().includes(`add`)){
+    let messageArr = message.content.split(` `)
+    if(messageArr.length > 1){
+      let id = messageArr[1].slice(2, -1)
+      let userObj = await client.users.fetch(id)
+      user = userObj.username;
+      var userFound = await findPlayer(user)
     }else{
-      await newPlayer(username);
-      message.channel.send(`added new user`)
+      var userFound = await findPlayer(user)
+    }
+
+    if(userFound.found){
+      await updatePlayer(user, 5 )
+      userFound = await findPlayer(user)
+      message.channel.send(`aded,  balance: ${userFound.balance}`)
+    }else{
+      await newPlayer(user);
+      message.channel.send(`aded new user`)
     }
   }
 
   if(message.content.toLowerCase() == (`bal`)){
-    const userFound = await findPlayer(username)
+    console.log(user)
+    const userFound = await findPlayer(user)
 
     if(userFound.found){
       message.channel.send(`found ${userFound.name} with balance ${userFound.balance}`)
 
     }else{
-      await newPlayer(username);
-      message.channel.send(`added new user`)
+      await newPlayer(user);
+      message.channel.send(`aded new user balance : 0`)
     }
    }
+
+   
+  if(message.content.toLowerCase() == (`leaderboard`)){
+    let users = await findPlayer()
+    users = users.sort((a, b) => b.balance - a.balance);
+    const leaderboardEmbed = new EmbedBuilder()
+	.setColor(0xffcf40)
+	.setTitle(`Leaderboard`)
+  .setDescription('The Top 5 Players')
+    for (let i = 0; i < Math.min(5, users.length); i++) {
+      leaderboardEmbed.addFields( {name: `${i + 1} : ${users[i].name}`, value: `${users[i].balance}`,inline:false})
+    }
+    message.channel.send({embeds: [leaderboardEmbed]})
+
+  }
+
 
     
 })

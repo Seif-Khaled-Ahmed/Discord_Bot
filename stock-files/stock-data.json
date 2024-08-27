@@ -2,13 +2,13 @@
   "data": {
     "symbol": "AAPL",
     "company": "Apple Inc. Common Stock",
-    "timeAsOf": "Aug 23, 2024",
+    "timeAsOf": "Aug 26, 2024",
     "isNasdaq100": true,
-    "lastSalePrice": "$226.84",
-    "netChange": "+2.31",
-    "percentageChange": "+1.03%",
+    "lastSalePrice": "$228.07",
+    "netChange": "+0.89",
+    "percentageChange": "+0.39%",
     "deltaIndicator": "up",
-    "previousClose": "$224.53",
+    "previousClose": "$227.18",
     "volume": null,
     "chart": [
       {
@@ -1882,6 +1882,19 @@
         },
         "x": 1724371200000,
         "y": 226.84
+      },
+      {
+        "z": {
+          "high": "227.28",
+          "low": "223.8905",
+          "open": "226.76",
+          "close": "227.18",
+          "volume": "30,602,210",
+          "dateTime": "8/26/2024",
+          "value": "227.18"
+        },
+        "x": 1724630400000,
+        "y": 227.18
       }
     ],
     "volumeChart": null,
