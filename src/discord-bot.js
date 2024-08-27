@@ -179,16 +179,19 @@ client.on('messageCreate',async (message)=>{
     {
       fs.writeFile('./stock-files/stock-data.json',JSON.stringify(await getYear(),null,2), err => {if(err) console.log(err);}) //make stock-data for graph
       await getGraph()
-      const row = new ActionRowBuilder();
-      row.components.push(
-        new ButtonBuilder().setCustomId("5").setLabel("green").setStyle(ButtonStyle.Primary)
-      )
+      const add = new ActionRowBuilder();
+      add.components.push
+      (new ButtonBuilder()
+      .setCustomId("Add")
+      .setLabel("Add")
+      .setStyle(ButtonStyle.Success)
+    )
+
       await message.channel.send({
         embeds: [stockEmbed],
         files: [file],
-        components: [row]
+        components: [add]
         })   //send embed
-        process.exit();
     }
   if(message.content.toLowerCase().includes(`add`)){
     let messageArr = message.content.split(` `)
