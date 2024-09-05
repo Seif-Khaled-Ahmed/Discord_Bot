@@ -24,15 +24,15 @@ async function getGraph() {
 
   const childPython = spawn("python", ["stock-files/graph.py"]);
 
-  await childPython.stdout.on("data", (data) => {
+  childPython.stdout.on("data", (data) => {
     console.log(hexToString(data));
   });
 
-  await childPython.stderr.on("data", (data) => {
+  childPython.stderr.on("data", (data) => {
     console.log(hexToString(data));
   });
 
-  await childPython.on("close", (data) => {
+  childPython.on("close", (data) => {
     console.log(data);
   });
 }
@@ -103,7 +103,7 @@ async function findPlayer(name) {
   }
 }
 //TODO{API FOR STOCKS}////////////////////////////////////
-const stockSymbol = "TESLA";
+const stockSymbol = " AAPL";
 const firstDate = "2024-01-30";
 const secondDate = "2024-09-30";
 async function getYear() {
