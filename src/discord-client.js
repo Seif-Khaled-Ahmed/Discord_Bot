@@ -39,7 +39,11 @@ const client = new Client({
 const port = process.env.Port;
 client.login(process.env.DiscordBotKey); //Key for Bot
 const file = new AttachmentBuilder("stock-files/stock-graph.png");
-const aiChats = ["1280038285107925104", "1067543706044993567"];
+const aiChats = [
+  "1280038285107925104",
+  "1067543706044993567",
+  "1283434311609094144",
+];
 var chatStarted = false;
 
 client.on("ready", (c) => {
